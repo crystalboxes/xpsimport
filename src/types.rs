@@ -1,0 +1,63 @@
+pub struct Bone {
+  pub id: i16,
+  pub name: String,
+  pub co: (f32, f32, f32),
+  pub parent_id: i16,
+}
+
+pub struct BonePose {
+  pub name: String,
+  pub coordinate_delta: (f32, f32, f32),
+  pub rotation_delta: (f32, f32, f32),
+  pub scale: (f32, f32, f32), 
+}
+
+pub struct Mesh {
+  pub name: String,
+  pub textures: Vec<Texture>,
+  pub vertices: Vec<Vertex>,
+  pub faces: Vec<u32>,
+  pub uv_count: u16,
+}
+
+pub struct BoneWeight {
+  pub id: i16,
+  pub weight: f32,
+}
+
+pub struct Vertex {
+  pub id: u32,
+  pub position: (f32, f32, f32),
+  pub normal: (f32, f32, f32),
+  pub color: (u8, u8, u8, u8),
+  pub uv:Vec< (f32, f32)>,
+  pub bone_weights: Vec<BoneWeight>,
+  pub merged: bool,
+}
+
+pub struct Texture {
+  pub id: u16,
+  pub file: String,
+  pub uv_layer: u16,
+}
+
+#[derive(Default)]
+pub struct Data {
+  pub header: Header,
+  pub bones: Vec<Bone>,
+  pub meshes: Vec<Mesh>,
+}
+
+#[derive(Default)]
+pub struct Header {
+  pub magic_number: u32, 
+  pub version_mayor: u16,  
+  pub version_minor: u16,  
+  pub aral: String,
+  pub settings_length: u32,
+  pub machine: String,     
+  pub user: String,        
+  pub file: String,
+  pub settings: String,    
+  pub pose: String,        
+}
