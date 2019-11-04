@@ -17,6 +17,5 @@ add_custom_target(xpsimport ALL
   COMMAND ${CMAKE_COMMAND} -E copy ${XPSIMPORT_SO} ${CMAKE_CURRENT_BINARY_DIR}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories(include)
 
 set_target_properties(xpsimport PROPERTIES LOCATION ${CMAKE_CURRENT_BINARY_DIR})

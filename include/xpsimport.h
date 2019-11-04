@@ -14,17 +14,17 @@ extern "C"
 typedef struct Vector3
 {
 	float x, y, z;
-} _Vector3;
+} Vector3;
 
 typedef struct Vector2
 {
 	float x, y;
-} _Vector3;
+} Vector2;
 
 typedef struct Color
 {
 	unsigned char x, y, z, w;
-} _Color;
+} Color;
 
 typedef struct XPSData XPSData;
 
