@@ -34,11 +34,11 @@ impl FileStream {
     out_string
   }
 
-  pub fn read_string(&mut self) -> String {
-    let mut out_string = String::new();
-    if let Err(_) = self.file.read_to_string(&mut out_string) {
-      return String::new()
-    }
-    out_string
-  }
+  // pub fn read_string(&mut self) -> String {
+  //   let mut out_string = String::new();
+  //   if let Err(_) = self.file.read_to_string(&mut out_string) {
+  //     return String::new()
+  //   }
+  //   out_string
+  // }
 }
