@@ -16,7 +16,9 @@ impl FileStream {
 
   pub fn read(&mut self, size: usize) -> Vec<u8> {
     let mut bytes = vec![0_u8; size];
-    self.file.read(&mut bytes).unwrap();
+    if let Err(_) = self.file.read(&mut bytes) {
+      return vec![]
+    }
     bytes
   }
 
@@ -24,7 +26,9 @@ impl FileStream {
     let mut out_string = String::new();
     let mut single_byte = [0_u8; 1];
     while single_byte[0] != '\0' as u8 {
-      self.file.read(&mut single_byte).unwrap();
+      if let Err(_) = self.file.read(&mut single_byte) {
+        return String::new()
+      }
       out_string.push(single_byte[0] as char);
     }
     out_string
@@ -32,7 +36,9 @@ impl FileStream {
 
   pub fn read_string(&mut self) -> String {
     let mut out_string = String::new();
-    self.file.read_to_string(&mut out_string).unwrap();
+    if let Err(_) = self.file.read_to_string(&mut out_string) {
+      return String::new()
+    }
     out_string
   }
 }

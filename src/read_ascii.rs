@@ -1,18 +1,17 @@
 use super::ascii_ops;
+use super::error_types::XpsError;
 use super::file_stream::FileStream;
 use std::collections::HashMap;
 use std::path::Path;
 
-use super::types::{
-  BoneWeight, Bone, BonePose, Data, Header, Mesh, Texture, Vertex,
-};
+use super::types::{Bone, BonePose, BoneWeight, Data, Header, Mesh, Texture, Vertex};
 
 pub fn read_uv_vertex(file: &mut FileStream) -> (f32, f32) {
   let line = ascii_ops::readline(file);
   let values = ascii_ops::split_values(&line);
   (
-      ascii_ops::get_float(&values[0]),
-      ascii_ops::get_float(&values[1]),
+    ascii_ops::get_float(&values[0]),
+    ascii_ops::get_float(&values[1]),
   )
 }
 
@@ -20,9 +19,9 @@ pub fn read_xyz(file: &mut FileStream) -> (f32, f32, f32) {
   let line = ascii_ops::readline(file);
   let values = ascii_ops::split_values(&line);
   (
-      ascii_ops::get_float(&values[0]),
-      ascii_ops::get_float(&values[1]),
-      ascii_ops::get_float(&values[2]),
+    ascii_ops::get_float(&values[0]),
+    ascii_ops::get_float(&values[1]),
+    ascii_ops::get_float(&values[2]),
   )
 }
 
@@ -40,10 +39,10 @@ fn read_values(file: &mut FileStream, _: usize) -> Vec<String> {
 pub fn read_float4(file: &mut FileStream) -> (f32, f32, f32, f32) {
   let values = read_values(file, 4);
   (
-      (ascii_ops::get_float(&values[0])),
-      (ascii_ops::get_float(&values[1])),
-      (ascii_ops::get_float(&values[2])),
-      (ascii_ops::get_float(&values[3])),
+    (ascii_ops::get_float(&values[0])),
+    (ascii_ops::get_float(&values[1])),
+    (ascii_ops::get_float(&values[2])),
+    (ascii_ops::get_float(&values[3])),
   )
 }
 
@@ -79,7 +78,7 @@ pub fn read_int4(file: &mut FileStream) -> (i32, i32, i32, i32) {
 
 pub fn read_face_indices(file: &mut FileStream) -> (i32, i32, i32) {
   let line = ascii_ops::readline(file);
-  let  values = ascii_ops::split_values(&line);
+  let values = ascii_ops::split_values(&line);
   (
     ascii_ops::get_int(&values[0]),
     ascii_ops::get_int(&values[1]),
@@ -101,7 +100,7 @@ pub fn read_bones(file: &mut FileStream) -> Vec<Bone> {
   bones
 }
 
-pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Vec<Mesh> {
+pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, XpsError> {
   let mut meshes = vec![];
   let mesh_count = ascii_ops::read_int(file);
   for _ in 0..mesh_count {
@@ -114,12 +113,16 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Vec<Mesh> {
     let texture_count = ascii_ops::read_int(file);
     for tex_id in 0..texture_count {
       let texture_file: String = {
-        Path::new(&ascii_ops::read_string(file))
-          .parent()
-          .unwrap()
-          .to_str()
-          .unwrap()
-          .to_string()
+        match Path::new(&ascii_ops::read_string(file)).parent() {
+          Some(x) => {
+            if let Some(y) = x.to_str() {
+              y.to_string()
+            } else {
+              return Err(XpsError::PathToStr);
+            }
+          }
+          None => return Err(XpsError::PathGetParent),
+        }
       };
       let uv_layer_id = ascii_ops::read_int(file);
       textures.push(Texture {
@@ -183,7 +186,7 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Vec<Mesh> {
       uv_count: uv_layer_count as u16,
     });
   }
-  meshes
+  Ok(meshes)
 }
 
 pub fn read_pose_file(file: &mut FileStream) -> String {
@@ -203,19 +206,19 @@ pub fn pose_data(string: &String) -> HashMap<String, BonePose> {
         BonePose {
           name: bone_name,
           coordinate_delta: (
-              ascii_ops::get_float(&data_list[0]),
-              ascii_ops::get_float(&data_list[1]),
-              ascii_ops::get_float(&data_list[2]),
+            ascii_ops::get_float(&data_list[0]),
+            ascii_ops::get_float(&data_list[1]),
+            ascii_ops::get_float(&data_list[2]),
           ),
           rotation_delta: (
-              ascii_ops::get_float(&data_list[3]),
-              ascii_ops::get_float(&data_list[4]),
-              ascii_ops::get_float(&data_list[5]),
+            ascii_ops::get_float(&data_list[3]),
+            ascii_ops::get_float(&data_list[4]),
+            ascii_ops::get_float(&data_list[5]),
           ),
           scale: (
-              ascii_ops::get_float(&data_list[6]),
-              ascii_ops::get_float(&data_list[7]),
-              ascii_ops::get_float(&data_list[8]),
+            ascii_ops::get_float(&data_list[6]),
+            ascii_ops::get_float(&data_list[7]),
+            ascii_ops::get_float(&data_list[8]),
           ),
         },
       );
@@ -247,24 +250,35 @@ fn read_io_stream(filename: &String) -> Result<FileStream, String> {
   }
 }
 
-pub fn read_xps_model(filename: &String) -> Data {
-  let mut io_stream = read_io_stream(filename).unwrap();
-  let bones = read_bones(&mut io_stream);
-  let has_bones = bones.len() > 0;
-  let meshes = read_meshes(&mut io_stream, has_bones);
-  Data {
-    header: Header::default(),
-    bones: bones,
-    meshes: meshes,
+pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
+  if let Ok(mut io_stream) = read_io_stream(filename) {
+    let bones = read_bones(&mut io_stream);
+    if let Ok(meshes) = read_meshes(&mut io_stream, bones.len() > 0) {
+      return Ok(Data {
+        header: Header::default(),
+        bones: bones,
+        meshes: meshes,
+        error: XpsError::None,
+      });
+    }
+    return Err(XpsError::MeshReadAscii);
+  } else {
+    Err(XpsError::StreamNotOpened)
   }
 }
 
 pub fn read_xps_pose(filename: &String) -> HashMap<String, BonePose> {
-  let mut io_stream = read_io_stream(filename).unwrap();
-  pose_data(&read_pose_file(&mut io_stream))
+  if let Ok(mut io_stream) = read_io_stream(filename) {
+    pose_data(&read_pose_file(&mut io_stream))
+  } else {
+    HashMap::new()
+  }
 }
 
 pub fn read_bone_dict(filename: &String) -> (HashMap<String, String>, HashMap<String, String>) {
-  let mut io_stream = read_io_stream(filename).unwrap();
-  bone_dict_data(&read_pose_file(&mut io_stream))
+  if let Ok(mut io_stream) = read_io_stream(filename) {
+    bone_dict_data(&read_pose_file(&mut io_stream))
+  } else {
+    (HashMap::new(), HashMap::new())
+  }
 }

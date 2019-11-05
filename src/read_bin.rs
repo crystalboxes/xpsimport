@@ -1,36 +1,16 @@
 use super::bin_ops;
+use super::constants;
 use super::file_stream::FileStream;
 use super::read_ascii;
-use super::constants;
-use super::types::{
-    BoneWeight, Bone, BonePose, Data, Header, Mesh, Texture, Vertex,
-};
+use super::types::{Bone, BonePose, BoneWeight, Data, Header, Mesh, Texture, Vertex};
 use std::collections::HashMap;
 use std::io::Seek;
 use std::io::SeekFrom;
-use std::string::String;
 use std::path::Path;
-use std::fmt::Debug;
-use core::fmt;
+use std::string::String;
 
-pub enum XpsError {
-  StreamNotOpened,
-  InvalidHeader,
-}
+use super::error_types::XpsError;
 
-impl Debug for XpsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-      match self {
-        XpsError::StreamNotOpened => {
-          write!(f, "StreamNotOpened")
-        },
-        XpsError::InvalidHeader => {
-          write!(f, "InvalidHeader")
-
-        },
-      }
-    }
-}
 
 fn read_files_string(file: &mut FileStream) -> String {
   let mut length_byte2 = 0;
@@ -159,14 +139,16 @@ fn read_header(file: &mut FileStream) -> Header {
   header
 }
 
-fn find_header(file: &mut FileStream) -> Option<Header> {
+fn find_header(file: &mut FileStream) -> Result<Header, XpsError> {
   let number = bin_ops::read_u32(file);
-  file.file.seek(SeekFrom::Start(0)).unwrap();
+  if let Err(_) = file.file.seek(SeekFrom::Start(0)) {
+    return Err(XpsError::Unknown);
+  }
 
   if number as usize == constants::MAGIC_NUMBER {
-    return Some(read_header(file));
+    return Ok(read_header(file));
   }
-  None
+  Err(XpsError::InvalidHeader)
 }
 
 fn read_none(file: &mut FileStream, opt_count: usize) {
@@ -200,7 +182,11 @@ fn read_bones(file: &mut FileStream) -> Vec<Bone> {
   return bones;
 }
 
-fn read_meshes(file: &mut FileStream, header: &Header, has_bones: bool) -> Vec<Mesh> {
+fn read_meshes(
+  file: &mut FileStream,
+  header: &Header,
+  has_bones: bool,
+) -> Result<Vec<Mesh>, XpsError> {
   let mut meshes = vec![];
   let mesh_count = bin_ops::read_u32(file);
   let has_header = true;
@@ -218,12 +204,16 @@ fn read_meshes(file: &mut FileStream, header: &Header, has_bones: bool) -> Vec<M
     let tex_count = bin_ops::read_u32(file);
     for tex_id in 0..tex_count {
       let texture_file = {
-        Path::new(&read_files_string(file))
-          .parent()
-          .unwrap()
-          .to_str()
-          .unwrap()
-          .to_string()
+        match Path::new(&read_files_string(file)).parent() {
+          Some(x) => {
+            if let Some(y) = x.to_str() {
+              y.to_string()
+            } else {
+              return Err(XpsError::PathToStr);
+            }
+          }
+          None => return Err(XpsError::PathGetParent),
+        }
       };
       let uv_layer_id = bin_ops::read_u32(file);
 
@@ -291,7 +281,7 @@ fn read_meshes(file: &mut FileStream, header: &Header, has_bones: bool) -> Vec<M
       uv_count: uv_layer_count as u16,
     });
   }
-  meshes
+  Ok(meshes)
 }
 
 fn read_io_stream(filename: &String) -> Result<FileStream, String> {
@@ -304,15 +294,18 @@ fn read_io_stream(filename: &String) -> Result<FileStream, String> {
 
 pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
   if let Ok(mut io_stream) = read_io_stream(filename) {
-    if let Some(header) = find_header(&mut io_stream) {
+    if let Ok(header) = find_header(&mut io_stream) {
       let bones = read_bones(&mut io_stream);
       let has_bones = bones.len() > 0;
-      let meshes = read_meshes(&mut io_stream, &header, has_bones);
-      return Ok(Data {
-        header: header,
-        bones: bones,
-        meshes: meshes,
-      });
+      if let Ok(meshes) = read_meshes(&mut io_stream, &header, has_bones) {
+        return Ok(Data {
+          header: header,
+          bones: bones,
+          meshes: meshes,
+          error: XpsError::None
+        });
+      }
+      return Err(XpsError::MeshReadBin);
     } else {
       return Err(XpsError::InvalidHeader);
     }
@@ -334,7 +327,8 @@ fn read_default_pose(
       }
     }
   }
-  let pose_length = bin_ops::round_to_multiple(pose_length_unround as usize, constants::ROUND_MULTIPLE);
+  let pose_length =
+    bin_ops::round_to_multiple(pose_length_unround as usize, constants::ROUND_MULTIPLE);
   let empty = pose_length - pose_length_unround as usize;
   file.read(empty);
   let pose_string = bin_ops::decode_bytes(&pose_bytes);
