@@ -3,15 +3,15 @@ use super::error_types::XpsError;
 pub struct Bone {
   pub id: i16,
   pub name: String,
-  pub co: (f32, f32, f32),
+  pub co: [f32;3],
   pub parent_id: i16,
 }
 
 pub struct BonePose {
   pub name: String,
-  pub coordinate_delta: (f32, f32, f32),
-  pub rotation_delta: (f32, f32, f32),
-  pub scale: (f32, f32, f32),
+  pub coordinate_delta: [f32;3],
+  pub rotation_delta: [f32;3],
+  pub scale: [f32;3],
 }
 
 pub struct Mesh {
@@ -22,18 +22,19 @@ pub struct Mesh {
   pub uv_count: u16,
 }
 
+#[derive(Default, Copy, Clone)]
 pub struct BoneWeight {
   pub id: i16,
   pub weight: f32,
 }
-
+#[derive(Default, Clone, Copy)]
 pub struct Vertex {
   pub id: u32,
-  pub position: (f32, f32, f32),
-  pub normal: (f32, f32, f32),
-  pub color: (u8, u8, u8, u8),
-  pub uv: Vec<(f32, f32)>,
-  pub bone_weights: Vec<BoneWeight>,
+  pub position: [f32; 3],
+  pub normal: [f32; 3],
+  pub color: [u8; 4],
+  pub uv: [[f32;2]; 3],
+  pub bone_weights: [BoneWeight; 4],
   pub merged: bool,
 }
 

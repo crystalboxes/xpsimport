@@ -4,21 +4,36 @@ use super::ascii_ops;
 use super::bin_ops;
 use byteorder::{ByteOrder, NativeEndian};
 
+trait SeekRead: Seek + Read {}
+
+impl SeekRead for File {}
+
+impl SeekRead for BufReader<File> {}
+
 pub struct FileStream {
-    pub inner: BufReader<File>,
-    position: u64
+    inner: Box<dyn SeekRead>,
+    position: u64,
 }
 
 impl FileStream {
-    pub fn new(filename: &String) -> Option<FileStream> {
+    pub fn new(filename: &String, is_ascii: bool) -> Option<FileStream> {
         if let Ok(x) = File::open(filename) {
-            Some(FileStream { inner: BufReader::new(x), position: 0 })
+            Some(FileStream {
+                inner: {
+                    if is_ascii {
+                        Box::new(BufReader::new(x))
+                    } else {
+                        Box::new(x)
+                    }
+                },
+                position: 0,
+            })
         } else {
             return None;
         }
     }
 
-    pub fn seek(&mut self, pos: i32) -> Result<u64, Error>{
+    pub fn seek(&mut self, pos: i32) -> Result<u64, Error> {
         self.position = pos as u64;
         self.inner.seek(SeekFrom::Start(pos as u64))
     }
@@ -35,7 +50,7 @@ impl FileStream {
     pub fn read_line(&mut self) -> String {
         let mut out_string = String::new();
         let mut single_byte = [0_u8; 1];
-        while single_byte[0] != '\0' as u8 {
+        while single_byte[0] != '\n' as u8 {
             if let Err(_) = self.inner.read(&mut single_byte) {
                 return String::new();
             }
@@ -124,7 +139,7 @@ impl FileStream {
         if let Err(_) = self.inner.read(&mut bin) {
             return String::new();
         }
-        self.position += length  as u64;
+        self.position += length as u64;
         bin_ops::decode_bytes(&bin)
     }
 }

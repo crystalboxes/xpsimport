@@ -81,9 +81,9 @@ pub extern "C" fn xps_get_bone_parent_id(model: Box<types::Data>, index: i32) ->
 #[no_mangle]
 pub extern "C" fn xps_get_bone_position(model: Box<types::Data>, index: i32) -> Vector3 {
     Vector3 {
-        x: model.bones[index as usize].co.0,
-        y: model.bones[index as usize].co.1,
-        z: model.bones[index as usize].co.2,
+        x: model.bones[index as usize].co[0],
+        y: model.bones[index as usize].co[1],
+        z: model.bones[index as usize].co[2],
     }
 }
 
@@ -124,14 +124,11 @@ pub extern "C" fn xps_get_vertex_position(
 ) -> Vector3 {
     Vector3 {
         x: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .position
-            .0,
+            .position[0],
         y: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .position
-            .1,
+            .position[1],
         z: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .position
-            .2,
+            .position[2],
     }
 }
 
@@ -143,14 +140,11 @@ pub extern "C" fn xps_get_vertex_normal(
 ) -> Vector3 {
     Vector3 {
         x: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .normal
-            .0,
+            .normal[0],
         y: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .normal
-            .1,
+            .normal[1],
         z: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .normal
-            .2,
+            .normal[2],
     }
 }
 
@@ -162,17 +156,13 @@ pub extern "C" fn xps_get_vertex_color(
 ) -> Color {
     Color {
         x: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color
-            .0,
+            .color[0],
         y: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color
-            .1,
+            .color[1],
         z: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color
-            .2,
+            .color[2],
         w: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color
-            .3,
+            .color[3],
     }
 }
 
@@ -184,10 +174,8 @@ pub extern "C" fn xps_get_vertex_uv(
     layer_id: i32,
 ) -> Vector2 {
     Vector2 {
-        x: model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize]
-            .0,
-        y: model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize]
-            .1,
+        x: model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][0],
+        y: model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][1],
     }
 }
 
