@@ -3,9 +3,6 @@ name = "xpsimport"
 version = "0.1.0"
 authors = ["crystalboxes <ursus95@gmail.com>"]
 edition = "2018"
-
-[lib]
-name = "xpsimport"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
