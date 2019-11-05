@@ -1,12 +1,12 @@
 mod ascii_ops;
 mod bin_ops;
-mod file_stream;
-mod read_ascii;
-mod read_bin;
-pub mod material;
-pub mod types;
 pub mod constants;
 pub mod error_types;
+mod file_stream;
+pub mod material;
+mod read_ascii;
+mod read_bin;
+pub mod types;
 
 use error_types::XpsError;
 use std::alloc::{dealloc, Layout};
