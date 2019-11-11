@@ -1,8 +1,9 @@
 use super::error_types::XpsError;
+use std::ffi::CString;
 
 pub struct Bone {
   pub id: i16,
-  pub name: String,
+  pub name: CString,
   pub co: [f32;3],
   pub parent_id: i16,
 }
@@ -15,15 +16,11 @@ pub struct BonePose {
 }
 
 pub struct Mesh {
-  pub name: String,
+  pub name: CString,
   pub textures: Vec<Texture>,
   pub vertices: Vec<Vertex>,
   pub faces: Vec<u32>,
   pub uv_count: u16,
-
-  pub faces_count: i32,
-  pub textures_count: i32,
-  pub vertices_count: i32,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -34,7 +31,6 @@ pub struct BoneWeight {
 
 #[derive(Default, Clone, Copy)]
 pub struct Vertex {
-  // pub id: u32,
   pub position: [f32; 3],
   pub normal: [f32; 3],
   pub color: [u8; 4],
@@ -45,7 +41,7 @@ pub struct Vertex {
 
 pub struct Texture {
   pub id: u16,
-  pub file: String,
+  pub file: CString,
   pub uv_layer: u16,
 }
 
@@ -55,9 +51,6 @@ pub struct Data {
   pub bones: Vec<Bone>,
   pub meshes: Vec<Mesh>,
   pub error: XpsError,
-
-  pub bones_count: i32,
-  pub meshes_count: i32,
 }
 
 pub struct Header {

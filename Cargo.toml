@@ -10,3 +10,4 @@ crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
 byteorder = "1"
+libc = "0.2"

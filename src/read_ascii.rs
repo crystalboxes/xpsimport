@@ -3,6 +3,7 @@ use super::error_types::XpsError;
 use super::file_input::FileStream;
 use std::collections::HashMap;
 use std::path::Path;
+use std::ffi::CString;
 
 use super::types::{Bone, BonePose, BoneWeight, Data, Header, Mesh, Texture, Vertex};
 
@@ -90,7 +91,7 @@ pub fn read_bones(file: &mut FileStream) -> Vec<Bone> {
         let parent = file.read_int();
         bones.push(Bone {
             id: bone_id as i16,
-            name: name,
+            name: CString::new(name).unwrap_or(CString::new("").unwrap()),
             co: read_xyz(file),
             parent_id: parent as i16,
         })
@@ -125,7 +126,7 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
             let uv_layer_id = file.read_int();
             textures.push(Texture {
                 id: tex_id as u16,
-                file: texture_file,
+                file: CString::new(texture_file).unwrap_or(CString::new("").unwrap()),
                 uv_layer: uv_layer_id as u16,
             });
         }
@@ -168,20 +169,12 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
             faces.push(tri_idx.2 as u32);
         }
 
-        let faces_len = faces.len();
-        let textures_len = textures.len();
-        let vertex_len = vertex.len();
-
         meshes.push(Mesh {
-            name: mesh_name,
+            name: CString::new(mesh_name).unwrap_or(CString::new("").unwrap()),
             textures: textures,
             vertices: vertex,
             faces: faces,
             uv_count: uv_layer_count as u16,
-            
-            faces_count: faces_len as i32,
-            textures_count: textures_len as i32,
-            vertices_count: vertex_len as i32,
         });
     }
     Ok(meshes)
@@ -252,17 +245,12 @@ pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
     if let Ok(mut io_stream) = read_io_stream(filename) {
         let bones = read_bones(&mut io_stream);
         if let Ok(meshes) = read_meshes(&mut io_stream, bones.len() > 0) {
-        let meshes_len = meshes.len();
-        let bones_len = bones.len();
-            
             return Ok(Data {
                 header: Header::default(),
                 bones: bones,
                 meshes: meshes,
                 error: XpsError::None,
 
-                meshes_count: meshes_len as i32,
-                bones_count: bones_len as i32,
             });
         }
         return Err(XpsError::MeshReadAscii);

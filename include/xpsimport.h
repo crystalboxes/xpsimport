@@ -62,7 +62,7 @@ extern "C"
 
 	XPS_API const char *xps_get_bone_name(XPSData *model, int index);
 
-	XPS_API short xps_get_bone_parent_id(XPSData *model, int index);
+	XPS_API int xps_get_bone_parent_id(XPSData *model, int index);
 
 	XPS_API Vector3 xps_get_bone_position(XPSData *model, int index);
 

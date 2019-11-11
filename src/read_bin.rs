@@ -6,6 +6,7 @@ use super::types::{Bone, BonePose, BoneWeight, Data, Header, Mesh, Texture, Vert
 use std::collections::HashMap;
 use std::path::Path;
 use std::string::String;
+use std::ffi::CString;
 
 use byteorder::{ByteOrder, NativeEndian};
 
@@ -26,19 +27,6 @@ fn read_files_string(file: &mut FileStream) -> String {
     file.read_string_bin(length)
 }
 
-//fn read_vertex_color(file: &mut FileStream) -> [u8; 4] {
-//    [
-//        file.read_byte(),
-//        file.read_byte(),
-//        file.read_byte(),
-//        file.read_byte(),
-//    ]
-//}
-
-//fn read_uv_vert(file: &mut FileStream) -> [f32; 2] {
-//    [file.read_f32(), file.read_f32()]
-//}
-
 fn read_xyz(file: &mut FileStream) -> [f32; 3] {
     [
         file.read_f32(),
@@ -46,32 +34,6 @@ fn read_xyz(file: &mut FileStream) -> [f32; 3] {
         file.read_f32(),
     ]
 }
-
-//fn read_float4(file: &mut FileStream) -> (f32, f32, f32, f32) {
-//    (
-//        file.read_f32(),
-//        file.read_f32(),
-//        file.read_f32(),
-//        file.read_f32(),
-//    )
-//}
-
-//fn read_i16_4(file: &mut FileStream) -> (i16, i16, i16, i16) {
-//    (
-//        file.read_i16(),
-//        file.read_i16(),
-//        file.read_i16(),
-//        file.read_i16(),
-//    )
-//}
-
-//fn read_face_indices(file: &mut FileStream) -> (u32, u32, u32) {
-//    (
-//        file.read_u32(),
-//        file.read_u32(),
-//        file.read_u32(),
-//    )
-//}
 
 fn has_tangent_header(header: &Header) -> bool {
     header.version_mayor <= 1 && header.version_minor <= 12
@@ -173,7 +135,7 @@ fn read_bones(file: &mut FileStream) -> Vec<Bone> {
 
         let bone = Bone {
             id: bone_id as i16,
-            name: bone_name,
+            name: CString::new(bone_name).unwrap_or(CString::new("").unwrap()),
             co: coords,
             parent_id: parent_id,
         };
@@ -219,7 +181,7 @@ fn read_meshes(
 
             textures.push(Texture {
                 id: tex_id as u16,
-                file: texture_file,
+                file: CString::new(texture_file).unwrap_or(CString::new("").unwrap()),
                 uv_layer: uv_layer_id as u16,
             });
         }
@@ -329,20 +291,12 @@ fn read_meshes(
             faces[x] = NativeEndian::read_u32(&m[offset..offset + stride]);
         }
                 
-        let faces_len = faces.len();
-        let textures_len = textures.len();
-        let vertex_len = vertex.len();
-
         meshes.push(Mesh {
-            name: mesh_name,
+            name: CString::new(mesh_name).unwrap_or(CString::new("").unwrap()),
             textures: textures,
             vertices: vertex,
             faces: faces,
             uv_count: uv_layer_count as u16,
-
-            faces_count: faces_len as i32,
-            textures_count: textures_len as i32,
-            vertices_count: vertex_len as i32
         });
     }
     Ok(meshes)
@@ -363,16 +317,11 @@ pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
             let bones = read_bones(&mut io_stream);
             let has_bones = bones.len() > 0;
             if let Ok(meshes) = read_meshes(&mut io_stream, &header, has_bones) {
-                let meshes_len = meshes.len();
-                let bones_len = bones.len();
                 return Ok(Data {
                     header: header,
                     bones: bones,
                     meshes: meshes,
                     error: XpsError::None,
-
-                    meshes_count: meshes_len as i32,
-                    bones_count: bones_len as i32,
                 });
             }
             return Err(XpsError::MeshReadBin);

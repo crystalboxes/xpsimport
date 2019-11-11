@@ -2,9 +2,11 @@ use super::error_types::XpsError;
 use super::types;
 use std::alloc::{dealloc, Layout};
 use std::ffi::CStr;
-use std::os::raw::c_char;
 use std::ptr;
 use super::loader::open;
+
+extern crate libc;
+use libc::c_char; 
 
 #[repr(C)]
 pub struct Vector3 {
@@ -18,6 +20,7 @@ pub struct Vector2 {
     x: f32,
     y: f32,
 }
+
 #[repr(C)]
 pub struct Color {
     x: u8,
@@ -29,8 +32,7 @@ pub struct Color {
 #[no_mangle]
 pub extern "C" fn xps_load_model(filename: *const c_char) -> Box<types::Data> {
     let c_str = unsafe { CStr::from_ptr(filename) };
-    let boxed = 
-    match c_str.to_str() {
+    let boxed = match c_str.to_str() {
         Ok(s) => match open(s) {
             Ok(x) =>  Box::new(x),
             Err(x) => {
@@ -62,7 +64,7 @@ pub extern "C" fn xps_delete_model(model: Box<types::Data>) {
 #[no_mangle]
 pub extern "C" fn xps_get_mesh_count(model: *mut types::Data) -> i32 {
     let mut _model = unsafe { &mut *model };
-    _model.meshes_count
+    _model.meshes.len() as i32
 }
 
 #[no_mangle]
@@ -72,15 +74,15 @@ pub extern "C" fn xps_get_bone_count(model: *mut types::Data) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_bone_name(model: *mut types::Data, index: i32) -> *const u8 {
+pub extern "C" fn xps_get_bone_name(model: *mut types::Data, index: i32) -> *const c_char {
     let mut _model = unsafe { &mut *model };
     _model.bones[index as usize].name.as_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_bone_parent_id(model: *mut types::Data, index: i32) -> i16 {
+pub extern "C" fn xps_get_bone_parent_id(model: *mut types::Data, index: i32) -> i32 {
     let mut _model = unsafe { &mut *model };
-    _model.bones[index as usize].parent_id
+    _model.bones[index as usize].parent_id as i32
 }
 
 #[no_mangle]
@@ -94,7 +96,7 @@ pub extern "C" fn xps_get_bone_position(model: *mut types::Data, index: i32) -> 
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_mesh_name(model: *mut types::Data, mesh_index: i32) -> *const u8 {
+pub extern "C" fn xps_get_mesh_name(model: *mut types::Data, mesh_index: i32) -> *const c_char {
     let mut _model = unsafe { &mut *model };
     _model.meshes[mesh_index as usize].name.as_ptr()
 }
@@ -108,13 +110,13 @@ pub extern "C" fn xps_get_uv_layers(model: *mut types::Data, mesh_index: i32) ->
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_count(model: *mut types::Data, mesh_index: i32) -> i32 {
     let mut _model = unsafe { &mut *model };
-    _model.meshes[mesh_index as usize].vertices_count
+    _model.meshes[mesh_index as usize].vertices.len() as i32
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_texture_count(model: *mut types::Data, mesh_index: i32) -> i32 {
     let mut _model = unsafe { &mut *model };
-    _model.meshes[mesh_index as usize].textures_count
+    _model.meshes[mesh_index as usize].textures.len() as i32
 }
 
 #[no_mangle]
@@ -124,7 +126,7 @@ pub extern "C" fn xps_get_texture_id(model: *mut types::Data, mesh_index: i32, t
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_filename(model: *mut types::Data, mesh_index: i32, texture_index: i32) ->  *const u8 {
+pub extern "C" fn xps_get_texture_filename(model: *mut types::Data, mesh_index: i32, texture_index: i32) ->  *const c_char {
     let mut _model = unsafe { &mut *model };
     _model.meshes[mesh_index as usize].textures[texture_index as usize].file.as_ptr()
 }
@@ -135,12 +137,10 @@ pub extern "C" fn xps_get_texture_uv_layer(model: *mut types::Data, mesh_index: 
     _model.meshes[mesh_index as usize].textures[texture_index as usize].uv_layer as i32
 }
 
-
-
 #[no_mangle]
 pub extern "C" fn xps_get_mesh_index_count(model: *mut types::Data, mesh_index: i32) -> i32 {
     let mut _model = unsafe { &mut *model };
-    _model.meshes[mesh_index as usize].faces_count
+    _model.meshes[mesh_index as usize].faces.len() as i32
 }
 
 #[no_mangle]
