@@ -210,15 +210,15 @@ pub fn read_meshes(
                 faces.push(tri_idx.2 as u32);
             }
         }
+        let parser = super::mesh_name_parser::MeshNameParser::new(&mesh_name);
 
         meshes.push(Mesh {
-            name: CString::new(mesh_name.clone()).unwrap_or(CString::new("").unwrap()),
+            name: CString::new(parser.mesh_name.clone()).unwrap_or(CString::new("").unwrap()),
             textures: textures,
             vertices: vertex,
             faces: faces,
             uv_count: uv_layer_count as u16,
             render_group: {
-                let parser = super::mesh_name_parser::MeshNameParser::new(&mesh_name);
                 super::material::RenderGroup::new(parser.get_render_group_number())
             },
         });
