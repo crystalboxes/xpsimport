@@ -4,9 +4,7 @@ use std::alloc::{dealloc, Layout};
 use std::ffi::CStr;
 use std::ptr;
 use super::loader::open;
-
-extern crate libc;
-use libc::c_char; 
+use std::os::raw::c_char;
 
 #[repr(C)]
 pub struct Vector3 {

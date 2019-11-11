@@ -9,3 +9,5 @@ pub const ROUND_MULTIPLE: usize = 4;
 
 pub const ENCODING_READ: &str = "utf-8-sig";
 pub const ENCODING_WRITE: &str = "utf-8";
+
+pub const FLIP_UV: bool = true;

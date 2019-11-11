@@ -9,10 +9,12 @@ else ()
   set(TARGET_DIR "release")
 endif ()
 
-if(APPLE)
-  set(XPSIMPORT_SO "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_DIR}/libxpsimport.a")
-elseif (WIN32) 
+if(WIN32)
   set(XPSIMPORT_SO "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_DIR}/xpsimport.lib")
+elseif (APPLE) 
+  set(XPSIMPORT_SO "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_DIR}/libxpsimport.a")
+else() 
+  set(XPSIMPORT_SO "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_DIR}/libxpsimport.so")
 endif()
 
 add_custom_target(xpsimport ALL

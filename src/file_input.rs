@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{Read, BufReader, SeekFrom, Seek, Error};
-use super::ascii_ops;
-use super::bin_ops;
+use super::ascii;
+use super::binary;
 use byteorder::{ByteOrder, NativeEndian};
 
 trait SeekRead: Seek + Read {}
@@ -67,23 +67,14 @@ impl FileStream {
 
     pub fn read_int(self: &mut FileStream) -> i32 {
         let line = self.read_line_trim();
-        let value = ascii_ops::ignore_comment(&line);
-        ascii_ops::get_int(&value)
+        let value = ascii::ignore_comment(&line);
+        ascii::get_int(&value)
     }
 
     pub fn read_string(self: &mut FileStream) -> String {
         let line = self.read_line_trim();
-        ascii_ops::ignore_string_comment(&line)
+        ascii::ignore_string_comment(&line)
     }
-
-    // pub fn read_string_fully(&mut self) -> String {
-    //   let mut out_string = String::new();
-    //   if let Err(_) = self.file.read_to_string(&mut out_string) {
-    //     return String::new()
-    //   }
-    //   out_string
-    // }
-
 
     pub fn read_byte(self: &mut FileStream) -> u8 {
         let mut bin = [0_u8; 1];
@@ -140,6 +131,6 @@ impl FileStream {
             return String::new();
         }
         self.position += length as u64;
-        bin_ops::decode_bytes(&bin)
+        binary::decode_bytes(&bin)
     }
 }

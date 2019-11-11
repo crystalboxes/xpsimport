@@ -1,8 +1,8 @@
 #ifndef XPSIMPORT_HG
 #define XPSIMPORT_HG
 
-#ifndef XPS_STATIC_BUILD
-#define XPS_API
+#ifndef XPS_SHARED_BUILD
+#define XPS_API __declspec(dllexport)
 #else
 #define XPS_API
 #endif
