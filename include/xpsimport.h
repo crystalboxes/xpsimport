@@ -40,7 +40,7 @@ extern "C"
 
 	XPS_API XPSData *xps_load_model(const char *filename);
 
-	XPS_API unsigned char *xps_get_error(XPSData *model);
+	XPS_API unsigned char xps_get_error(XPSData *model);
 
 	XPS_API void xps_delete_model(XPSData *model);
 

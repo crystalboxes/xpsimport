@@ -20,6 +20,10 @@ pub struct Mesh {
   pub vertices: Vec<Vertex>,
   pub faces: Vec<u32>,
   pub uv_count: u16,
+
+  pub faces_count: i32,
+  pub textures_count: i32,
+  pub vertices_count: i32,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -51,6 +55,9 @@ pub struct Data {
   pub bones: Vec<Bone>,
   pub meshes: Vec<Mesh>,
   pub error: XpsError,
+
+  pub bones_count: i32,
+  pub meshes_count: i32,
 }
 
 pub struct Header {

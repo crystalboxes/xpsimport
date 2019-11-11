@@ -168,12 +168,20 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
             faces.push(tri_idx.2 as u32);
         }
 
+        let faces_len = faces.len();
+        let textures_len = textures.len();
+        let vertex_len = vertex.len();
+
         meshes.push(Mesh {
             name: mesh_name,
             textures: textures,
             vertices: vertex,
             faces: faces,
             uv_count: uv_layer_count as u16,
+            
+            faces_count: faces_len as i32,
+            textures_count: textures_len as i32,
+            vertices_count: vertex_len as i32,
         });
     }
     Ok(meshes)
@@ -244,11 +252,17 @@ pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
     if let Ok(mut io_stream) = read_io_stream(filename) {
         let bones = read_bones(&mut io_stream);
         if let Ok(meshes) = read_meshes(&mut io_stream, bones.len() > 0) {
+        let meshes_len = meshes.len();
+        let bones_len = bones.len();
+            
             return Ok(Data {
                 header: Header::default(),
                 bones: bones,
                 meshes: meshes,
                 error: XpsError::None,
+
+                meshes_count: meshes_len as i32,
+                bones_count: bones_len as i32,
             });
         }
         return Err(XpsError::MeshReadAscii);

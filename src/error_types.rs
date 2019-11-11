@@ -1,6 +1,8 @@
 use core::fmt;
 use core::fmt::Debug;
 
+
+#[derive(Clone, Copy)]
 pub enum XpsError {
   StreamNotOpened,
   InvalidHeader,

@@ -328,6 +328,10 @@ fn read_meshes(
             let offset = stride * x;
             faces[x] = NativeEndian::read_u32(&m[offset..offset + stride]);
         }
+                
+        let faces_len = faces.len();
+        let textures_len = textures.len();
+        let vertex_len = vertex.len();
 
         meshes.push(Mesh {
             name: mesh_name,
@@ -335,6 +339,10 @@ fn read_meshes(
             vertices: vertex,
             faces: faces,
             uv_count: uv_layer_count as u16,
+
+            faces_count: faces_len as i32,
+            textures_count: textures_len as i32,
+            vertices_count: vertex_len as i32
         });
     }
     Ok(meshes)
@@ -355,11 +363,16 @@ pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
             let bones = read_bones(&mut io_stream);
             let has_bones = bones.len() > 0;
             if let Ok(meshes) = read_meshes(&mut io_stream, &header, has_bones) {
+                let meshes_len = meshes.len();
+                let bones_len = bones.len();
                 return Ok(Data {
                     header: header,
                     bones: bones,
                     meshes: meshes,
                     error: XpsError::None,
+
+                    meshes_count: meshes_len as i32,
+                    bones_count: bones_len as i32,
                 });
             }
             return Err(XpsError::MeshReadBin);

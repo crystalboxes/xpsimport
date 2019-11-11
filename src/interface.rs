@@ -29,24 +29,25 @@ pub struct Color {
 #[no_mangle]
 pub extern "C" fn xps_load_model(filename: *const c_char) -> Box<types::Data> {
     let c_str = unsafe { CStr::from_ptr(filename) };
+    let boxed = 
     match c_str.to_str() {
         Ok(s) => match open(s) {
-            Ok(x) => return Box::new(x),
+            Ok(x) =>  Box::new(x),
             Err(x) => {
                 let mut data = types::Data::default();
                 data.error = x;
-                return Box::new(data);
+                    Box::new(data)
             }
         },
-        Err(_) => {}
-    }
-
-    Box::new(types::Data::default())
+        Err(_) => Box::new(types::Data::default())
+    };
+    return boxed
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_error(model: Box<types::Data>) -> XpsError {
-    model.error
+pub extern "C" fn xps_get_error(model: *mut types::Data) -> XpsError {
+    let mut _model = unsafe { &mut *model };
+    _model.error
 }
 
 #[no_mangle]
@@ -59,164 +60,184 @@ pub extern "C" fn xps_delete_model(model: Box<types::Data>) {
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_mesh_count(model: Box<types::Data>) -> i32 {
-    model.meshes.len() as i32
+pub extern "C" fn xps_get_mesh_count(model: *mut types::Data) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes_count
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_bone_count(model: Box<types::Data>) -> i32 {
-    model.bones.len() as i32
+pub extern "C" fn xps_get_bone_count(model: *mut types::Data) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.bones.len() as i32
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_bone_name(model: Box<types::Data>, index: i32) -> *const u8 {
-    model.bones[index as usize].name.as_ptr()
+pub extern "C" fn xps_get_bone_name(model: *mut types::Data, index: i32) -> *const u8 {
+    let mut _model = unsafe { &mut *model };
+    _model.bones[index as usize].name.as_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_bone_parent_id(model: Box<types::Data>, index: i32) -> i16 {
-    model.bones[index as usize].parent_id
+pub extern "C" fn xps_get_bone_parent_id(model: *mut types::Data, index: i32) -> i16 {
+    let mut _model = unsafe { &mut *model };
+    _model.bones[index as usize].parent_id
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_bone_position(model: Box<types::Data>, index: i32) -> Vector3 {
+pub extern "C" fn xps_get_bone_position(model: *mut types::Data, index: i32) -> Vector3 {
+    let mut _model = unsafe { &mut *model };
     Vector3 {
-        x: model.bones[index as usize].co[0],
-        y: model.bones[index as usize].co[1],
-        z: model.bones[index as usize].co[2],
+        x: _model.bones[index as usize].co[0],
+        y: _model.bones[index as usize].co[1],
+        z: _model.bones[index as usize].co[2],
     }
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_mesh_name(model: Box<types::Data>, mesh_index: i32) -> *const u8 {
-    model.meshes[mesh_index as usize].name.as_ptr()
+pub extern "C" fn xps_get_mesh_name(model: *mut types::Data, mesh_index: i32) -> *const u8 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].name.as_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_uv_layers(model: Box<types::Data>, mesh_index: i32) -> i32 {
-    model.meshes[mesh_index as usize].uv_count as i32
+pub extern "C" fn xps_get_uv_layers(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].uv_count as i32
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_vertex_count(model: Box<types::Data>, mesh_index: i32) -> i32 {
-    model.meshes[mesh_index as usize].vertices.len() as i32
+pub extern "C" fn xps_get_vertex_count(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].vertices_count
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_count(model: Box<types::Data>, mesh_index: i32) -> i32 {
-    model.meshes[mesh_index as usize].textures.len() as i32
+pub extern "C" fn xps_get_texture_count(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].textures_count
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_id(model: Box<types::Data>, mesh_index: i32, texture_index: i32) -> i32 {
-    model.meshes[mesh_index as usize].textures[texture_index as usize].id as i32
+pub extern "C" fn xps_get_texture_id(model: *mut types::Data, mesh_index: i32, texture_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].textures[texture_index as usize].id as i32
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_filename(model: Box<types::Data>, mesh_index: i32, texture_index: i32) ->  *const u8 {
-    model.meshes[mesh_index as usize].textures[texture_index as usize].file.as_ptr()
+pub extern "C" fn xps_get_texture_filename(model: *mut types::Data, mesh_index: i32, texture_index: i32) ->  *const u8 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].textures[texture_index as usize].file.as_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_uv_layer(model: Box<types::Data>, mesh_index: i32, texture_index: i32) -> i32 {
-    model.meshes[mesh_index as usize].textures[texture_index as usize].uv_layer as i32
+pub extern "C" fn xps_get_texture_uv_layer(model: *mut types::Data, mesh_index: i32, texture_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].textures[texture_index as usize].uv_layer as i32
 }
 
 
 
 #[no_mangle]
-pub extern "C" fn xps_get_mesh_index_count(model: Box<types::Data>, mesh_index: i32) -> i32 {
-    model.meshes[mesh_index as usize].faces.len() as i32
+pub extern "C" fn xps_get_mesh_index_count(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].faces_count
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_mesh_index(model: Box<types::Data>, mesh_index: i32, index_num: i32) -> i32 {
-    model.meshes[mesh_index as usize].faces[index_num as usize] as i32
+pub extern "C" fn xps_get_mesh_index(model: *mut types::Data, mesh_index: i32, index_num: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].faces[index_num as usize] as i32
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_position(
-    model: Box<types::Data>,
+    model: *mut types::Data,
     mesh_index: i32,
     vertex_index: i32,
 ) -> Vector3 {
+    let mut _model = unsafe { &mut *model };
     Vector3 {
-        x: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .position[0],
-        y: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .position[1],
-        z: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .position[2],
     }
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_normal(
-    model: Box<types::Data>,
+    model: *mut types::Data,
     mesh_index: i32,
     vertex_index: i32,
 ) -> Vector3 {
+    let mut _model = unsafe { &mut *model };
     Vector3 {
-        x: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .normal[0],
-        y: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .normal[1],
-        z: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .normal[2],
     }
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_color(
-    model: Box<types::Data>,
+    model: *mut types::Data,
     mesh_index: i32,
     vertex_index: i32,
 ) -> Color {
+    let mut _model = unsafe { &mut *model };
     Color {
-        x: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .color[0],
-        y: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .color[1],
-        z: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .color[2],
-        w: model.meshes[mesh_index as usize].vertices[vertex_index as usize]
+        w: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
             .color[3],
     }
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_uv(
-    model: Box<types::Data>,
+    model: *mut types::Data,
     mesh_index: i32,
     vertex_index: i32,
     layer_id: i32,
 ) -> Vector2 {
+    let mut _model = unsafe { &mut *model };
     Vector2 {
-        x: model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][0],
-        y: model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][1],
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][0],
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][1],
     }
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_bone_index(
-    model: Box<types::Data>,
+    model: *mut types::Data,
     mesh_index: i32,
     vertex_index: i32,
     weight_id: i32,
 ) -> i32 {
-    model.meshes[mesh_index as usize].vertices[vertex_index as usize].bone_weights
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].vertices[vertex_index as usize].bone_weights
         [weight_id as usize]
         .id as i32
 }
 
 #[no_mangle]
 pub extern "C" fn xps_get_vertex_bone_weight(
-    model: Box<types::Data>,
+    model: *mut types::Data,
     mesh_index: i32,
     vertex_index: i32,
     weight_id: i32,
 ) -> f32 {
-    model.meshes[mesh_index as usize].vertices[vertex_index as usize].bone_weights
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].vertices[vertex_index as usize].bone_weights
         [weight_id as usize]
         .weight
 }
