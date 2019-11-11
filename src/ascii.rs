@@ -1,75 +1,72 @@
 use super::error_types::XpsError;
 use super::file_input::FileStream;
 use std::collections::HashMap;
-use std::path::Path;
 use std::ffi::CString;
+use std::path::Path;
 
 use super::constants;
 
 use super::types::{Bone, BonePose, BoneWeight, Data, Header, Mesh, Texture, Vertex};
 
 pub fn split_values(line: &String) -> Vec<String> {
-  line
-    .replace("#", " ")
-    .split_whitespace()
-    .map(|x| x.to_string())
-    .collect()
+    line.replace("#", " ")
+        .split_whitespace()
+        .map(|x| x.to_string())
+        .collect()
 }
 
 pub fn ignore_comment(line: &String) -> String {
-  if let Some(x) = line.replace("#", " ").split_whitespace().next() {
-    x.to_string()
-  } else {
-    "".to_string()
-  }
+    if let Some(x) = line.replace("#", " ").split_whitespace().next() {
+        x.to_string()
+    } else {
+        "".to_string()
+    }
 }
 
 pub fn ignore_string_comment(line: &String) -> String {
-  if let Some(x) = line.split("#").next() {
-    x.to_string()
-  } else {
-    "".to_string()
-  }
+    if let Some(x) = line.split("#").next() {
+        x.to_string()
+    } else {
+        "".to_string()
+    }
 }
 pub fn get_float(value: &String) -> f32 {
-  if let Ok(x) = value.parse() {
-    x
-  } else {
-    std::f32::NAN
-  }
+    if let Ok(x) = value.parse() {
+        x
+    } else {
+        std::f32::NAN
+    }
 }
 
 pub fn get_int(value: &String) -> i32 {
-  if let Ok(x) = value.parse() {
-    x
-  } else {
-    0
-  }
+    if let Ok(x) = value.parse() {
+        x
+    } else {
+        0
+    }
 }
-
 
 pub fn read_uv_vertex(file: &mut FileStream) -> [f32; 2] {
     let line = file.read_line_trim();
     let values = split_values(&line);
-    [
-        get_float(&values[0]),
-        {
-            let v = get_float(&values[1]);
-            if constants::FLIP_UV {
-                1_f32 - v
-            } else {
-                v
-            }
+    [get_float(&values[0]), {
+        let v = get_float(&values[1]);
+        if constants::FLIP_UV {
+            1_f32 - v
+        } else {
+            v
         }
-    ]
+    }]
 }
 
 pub fn read_xyz(file: &mut FileStream) -> [f32; 3] {
     let line = file.read_line_trim();
     let values = split_values(&line);
-    [get_float(&values[0]),
+    [
+        get_float(&values[0]),
         get_float(&values[1]),
-        get_float(&values[2]), ]
+        get_float(&values[2]),
+    ]
 }
 
 pub fn fill_array(array: &mut Vec<String>, min_length: usize, value: String) {
@@ -205,8 +202,13 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
         for _ in 0..tri_count {
             let tri_idx = read_face_indices(file);
             faces.push(tri_idx.0 as u32);
-            faces.push(tri_idx.1 as u32);
-            faces.push(tri_idx.2 as u32);
+            if constants::REVERSE_WINDING {
+                faces.push(tri_idx.2 as u32);
+                faces.push(tri_idx.1 as u32);
+            } else {
+                faces.push(tri_idx.1 as u32);
+                faces.push(tri_idx.2 as u32);
+            }
         }
 
         meshes.push(Mesh {
@@ -254,7 +256,6 @@ pub fn pose_data(string: &String) -> HashMap<String, BonePose> {
     pose_data
 }
 
-
 fn read_io_stream(filename: &String) -> Result<FileStream, String> {
     if let Some(x) = FileStream::new(filename, true) {
         Ok(x)
@@ -272,7 +273,6 @@ pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
                 bones: bones,
                 meshes: meshes,
                 error: XpsError::None,
-
             });
         }
         return Err(XpsError::MeshReadAscii);

@@ -277,8 +277,13 @@ fn read_meshes(
     file.read_u32(),
   );
       faces.push(idx.0);
-      faces.push(idx.1);
-      faces.push(idx.2);
+      if constants::REVERSE_WINDING {
+        faces.push(idx.2);
+        faces.push(idx.1);
+      } else {
+        faces.push(idx.1);
+        faces.push(idx.2);
+      }
     }
     meshes.push(Mesh {
       name: CString::new(mesh_name).unwrap_or(CString::new("").unwrap()),
