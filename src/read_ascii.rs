@@ -157,7 +157,7 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
                     };
                 }
             }
-            vertex[vtx].id = vtx as u32;
+            // vertex[vtx].id = vtx as u32;
         }
         let mut faces = vec![];
         let tri_count = file.read_int();

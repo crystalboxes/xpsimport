@@ -27,9 +27,10 @@ pub struct BoneWeight {
   pub id: i16,
   pub weight: f32,
 }
+
 #[derive(Default, Clone, Copy)]
 pub struct Vertex {
-  pub id: u32,
+  // pub id: u32,
   pub position: [f32; 3],
   pub normal: [f32; 3],
   pub color: [u8; 4],

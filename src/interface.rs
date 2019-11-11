@@ -108,12 +108,30 @@ pub extern "C" fn xps_get_texture_count(model: Box<types::Data>, mesh_index: i32
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_vertex_id(
-    model: Box<types::Data>,
-    mesh_index: i32,
-    vertex_index: i32,
-) -> i32 {
-    model.meshes[mesh_index as usize].vertices[vertex_index as usize].id as i32
+pub extern "C" fn xps_get_texture_id(model: Box<types::Data>, mesh_index: i32, texture_index: i32) -> i32 {
+    model.meshes[mesh_index as usize].textures[texture_index as usize].id as i32
+}
+
+#[no_mangle]
+pub extern "C" fn xps_get_texture_filename(model: Box<types::Data>, mesh_index: i32, texture_index: i32) ->  *const u8 {
+    model.meshes[mesh_index as usize].textures[texture_index as usize].file.as_ptr()
+}
+
+#[no_mangle]
+pub extern "C" fn xps_get_texture_uv_layer(model: Box<types::Data>, mesh_index: i32, texture_index: i32) -> i32 {
+    model.meshes[mesh_index as usize].textures[texture_index as usize].uv_layer as i32
+}
+
+
+
+#[no_mangle]
+pub extern "C" fn xps_get_mesh_index_count(model: Box<types::Data>, mesh_index: i32) -> i32 {
+    model.meshes[mesh_index as usize].faces.len() as i32
+}
+
+#[no_mangle]
+pub extern "C" fn xps_get_mesh_index(model: Box<types::Data>, mesh_index: i32, index_num: i32) -> i32 {
+    model.meshes[mesh_index as usize].faces[index_num as usize] as i32
 }
 
 #[no_mangle]

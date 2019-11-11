@@ -266,7 +266,7 @@ fn read_meshes(
         for vid in 0..vertex_count {
             let offset = vid * vertex_size;
             vertex[vid] = Vertex {
-                id: vid as u32,
+                // id: vid as u32,
                 position: [
                     NativeEndian::read_f32(&m[offset + 4 * 0..offset + 4 * 1]),
                     NativeEndian::read_f32(&m[offset + 4 * 1..offset + 4 * 2]),

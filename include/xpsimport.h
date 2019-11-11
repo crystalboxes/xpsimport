@@ -46,7 +46,19 @@ extern "C"
 
 	XPS_API int xps_get_mesh_count(XPSData *model);
 
+	XPS_API int xps_get_mesh_index_count(XPSData *model, int mesh_index);
+
+	XPS_API int xps_get_mesh_index(XPSData *model, int mesh_index, int index_num);
+
 	XPS_API int xps_get_bone_count(XPSData *model);
+
+	XPS_API int xps_get_texture_count(XPSData *model, int mesh_index);
+	
+	XPS_API int xps_get_texture_id(XPSData *model, int mesh_index, int texture_index);
+	
+	XPS_API int xps_get_texture_filename(XPSData *model, int mesh_index, int texture_index);
+	
+	XPS_API int xps_get_texture_uv_layer(XPSData *model, int mesh_index, int texture_index);
 
 	XPS_API const char *xps_get_bone_name(XPSData *model, int index);
 
@@ -59,10 +71,6 @@ extern "C"
 	XPS_API int xps_get_uv_layers(XPSData *model, int mesh_index);
 
 	XPS_API int xps_get_vertex_count(XPSData *model, int mesh_index);
-
-	XPS_API int xps_get_texture_count(XPSData *model, int mesh_index);
-
-	XPS_API int xps_get_vertex_id(XPSData *model, int mesh_index, int vertex_index);
 
 	XPS_API Vector3 xps_get_vertex_position(XPSData *model, int mesh_index, int vertex_index);
 
