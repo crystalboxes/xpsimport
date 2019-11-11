@@ -1,10 +1,11 @@
+mod ascii;
+mod binary;
 pub mod constants;
 pub mod error_types;
 mod file_input;
-pub mod loader;
 pub mod interface;
+pub mod loader;
 pub mod material;
-mod ascii;
-mod binary;
+pub mod mesh_name_parser;
 pub mod types;
-
+mod bone_naming;

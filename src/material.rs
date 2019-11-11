@@ -7,7 +7,7 @@ pub struct RenderGroup {
    pub bump2_rep: bool,
    pub spec1_rep: bool,
    pub tex_count: i32,
-   pub texture_types: Vec<String>,
+   pub texture_types: Vec<std::ffi::CString>,
 }
 
 impl RenderGroup {
@@ -409,7 +409,12 @@ impl RenderGroup {
          bump2_rep: bump2_rep,
          spec1_rep: spec1_rep,
          tex_count: tex_count,
-         texture_types: texture_types.into_iter().map(|x| x.to_string()).collect(),
+         texture_types: texture_types
+            .into_iter()
+            .map(|x| {
+               std::ffi::CString::new(x.to_string()).unwrap_or(std::ffi::CString::new("").unwrap())
+            })
+            .collect(),
       }
    }
 }

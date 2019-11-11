@@ -4,8 +4,6 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::path::Path;
 
-use super::constants;
-
 use super::types::{Bone, BonePose, BoneWeight, Data, Header, Mesh, Texture, Vertex};
 
 pub fn split_values(line: &String) -> Vec<String> {
@@ -44,19 +42,6 @@ pub fn get_int(value: &String) -> i32 {
     } else {
         0
     }
-}
-
-pub fn read_uv_vertex(file: &mut FileStream) -> [f32; 2] {
-    let line = file.read_line_trim();
-    let values = split_values(&line);
-    [get_float(&values[0]), {
-        let v = get_float(&values[1]);
-        if constants::FLIP_UV {
-            1_f32 - v
-        } else {
-            v
-        }
-    }]
 }
 
 pub fn read_xyz(file: &mut FileStream) -> [f32; 3] {
@@ -136,7 +121,11 @@ pub fn read_bones(file: &mut FileStream) -> Vec<Bone> {
     bones
 }
 
-pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, XpsError> {
+pub fn read_meshes(
+    file: &mut FileStream,
+    has_bones: bool,
+    params: super::types::ImportParameters,
+) -> Result<Vec<Mesh>, XpsError> {
     let mut meshes = vec![];
     let mesh_count = file.read_int();
     for _ in 0..mesh_count {
@@ -183,7 +172,18 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
                 vertex_color.3 as u8,
             ];
             for x in 0..uv_layer_count {
-                vertex[vtx].uv[x] = read_uv_vertex(file);
+                vertex[vtx].uv[x] = {
+                    let line = file.read_line_trim();
+                    let values = split_values(&line);
+                    [get_float(&values[0]), {
+                        let v = get_float(&values[1]);
+                        if params.flip_uv {
+                            1_f32 - v
+                        } else {
+                            v
+                        }
+                    }]
+                };
             }
 
             if has_bones {
@@ -202,7 +202,7 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
         for _ in 0..tri_count {
             let tri_idx = read_face_indices(file);
             faces.push(tri_idx.0 as u32);
-            if constants::REVERSE_WINDING {
+            if params.reverse_winding {
                 faces.push(tri_idx.2 as u32);
                 faces.push(tri_idx.1 as u32);
             } else {
@@ -212,11 +212,15 @@ pub fn read_meshes(file: &mut FileStream, has_bones: bool) -> Result<Vec<Mesh>, 
         }
 
         meshes.push(Mesh {
-            name: CString::new(mesh_name).unwrap_or(CString::new("").unwrap()),
+            name: CString::new(mesh_name.clone()).unwrap_or(CString::new("").unwrap()),
             textures: textures,
             vertices: vertex,
             faces: faces,
             uv_count: uv_layer_count as u16,
+            render_group: {
+                let parser = super::mesh_name_parser::MeshNameParser::new(&mesh_name);
+                super::material::RenderGroup::new(parser.get_render_group_number())
+            },
         });
     }
     Ok(meshes)
@@ -264,10 +268,13 @@ fn read_io_stream(filename: &String) -> Result<FileStream, String> {
     }
 }
 
-pub fn read_xps_model(filename: &String) -> Result<Data, XpsError> {
+pub fn read_xps_model(
+    filename: &String,
+    params: super::types::ImportParameters,
+) -> Result<Data, XpsError> {
     if let Ok(mut io_stream) = read_io_stream(filename) {
         let bones = read_bones(&mut io_stream);
-        if let Ok(meshes) = read_meshes(&mut io_stream, bones.len() > 0) {
+        if let Ok(meshes) = read_meshes(&mut io_stream, bones.len() > 0, params) {
             return Ok(Data {
                 header: Header::default(),
                 bones: bones,

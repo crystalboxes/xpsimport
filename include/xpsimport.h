@@ -38,7 +38,10 @@ extern "C"
 	static const unsigned char XPS_ERROR_MESH_READ_BIN = 7;
 	static const unsigned char XPS_ERROR_NONE = 8;
 
-	XPS_API XPSData *xps_load_model(const char *filename);
+	static const unsigned char XPS_BONES_DEFAULT = 0;
+	static const unsigned char XPS_BONES_MECANIM = 1;
+
+	XPS_API XPSData *xps_load_model(const char *filename, unsigned char bone_naming_format, int flip_uv, int reverse_winding);
 
 	XPS_API unsigned char xps_get_error(XPSData *model);
 
@@ -83,6 +86,21 @@ extern "C"
 	XPS_API int xps_get_vertex_bone_index(XPSData *model, int mesh_index, int vertex_index, int weight_id);
 
 	XPS_API float xps_get_vertex_bone_weight(XPSData *model, int mesh_index, int vertex_index, int weight_id);
+
+	XPS_API int xps_get_render_group_alpha(XPSData *model, int mesh_index);
+
+	XPS_API int xps_get_render_group_posable(XPSData *model, int mesh_index);
+
+	XPS_API int xps_get_render_group_bump1_rep(XPSData *model, int mesh_index);
+
+	XPS_API int xps_get_render_group_bump2_rep(XPSData *model, int mesh_index);
+
+	XPS_API int xps_get_render_group_spec1_rep(XPSData *model, int mesh_index);
+
+	XPS_API int xps_get_render_group_texture_count(XPSData *model, int mesh_index);
+
+	XPS_API const char * xps_get_render_group_texture_type(XPSData *model, int mesh_index, int texture_type_index);
+
 #ifdef __cplusplus
 }
 #endif

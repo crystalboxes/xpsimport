@@ -1,10 +1,10 @@
 use super::error_types::XpsError;
+use super::loader::open;
 use super::types;
 use std::alloc::{dealloc, Layout};
 use std::ffi::CStr;
-use std::ptr;
-use super::loader::open;
 use std::os::raw::c_char;
+use std::ptr;
 
 #[repr(C)]
 pub struct Vector3 {
@@ -28,20 +28,30 @@ pub struct Color {
 }
 
 #[no_mangle]
-pub extern "C" fn xps_load_model(filename: *const c_char) -> Box<types::Data> {
+pub extern "C" fn xps_load_model(
+    filename: *const c_char,
+    bone_naming_format: super::bone_naming::BoneNaming,
+    flip_uv: i32,
+    reverse_winding: i32,
+) -> Box<types::Data> {
     let c_str = unsafe { CStr::from_ptr(filename) };
     let boxed = match c_str.to_str() {
-        Ok(s) => match open(s) {
-            Ok(x) =>  Box::new(x),
+        Ok(s) => match open(
+            s,
+            bone_naming_format,
+            if flip_uv == 0 { false } else { true },
+            if reverse_winding == 0 { false } else { true },
+        ) {
+            Ok(x) => Box::new(x),
             Err(x) => {
                 let mut data = types::Data::default();
                 data.error = x;
-                    Box::new(data)
+                Box::new(data)
             }
         },
-        Err(_) => Box::new(types::Data::default())
+        Err(_) => Box::new(types::Data::default()),
     };
-    return boxed
+    return boxed;
 }
 
 #[no_mangle]
@@ -118,19 +128,33 @@ pub extern "C" fn xps_get_texture_count(model: *mut types::Data, mesh_index: i32
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_id(model: *mut types::Data, mesh_index: i32, texture_index: i32) -> i32 {
+pub extern "C" fn xps_get_texture_id(
+    model: *mut types::Data,
+    mesh_index: i32,
+    texture_index: i32,
+) -> i32 {
     let mut _model = unsafe { &mut *model };
     _model.meshes[mesh_index as usize].textures[texture_index as usize].id as i32
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_filename(model: *mut types::Data, mesh_index: i32, texture_index: i32) ->  *const c_char {
+pub extern "C" fn xps_get_texture_filename(
+    model: *mut types::Data,
+    mesh_index: i32,
+    texture_index: i32,
+) -> *const c_char {
     let mut _model = unsafe { &mut *model };
-    _model.meshes[mesh_index as usize].textures[texture_index as usize].file.as_ptr()
+    _model.meshes[mesh_index as usize].textures[texture_index as usize]
+        .file
+        .as_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_texture_uv_layer(model: *mut types::Data, mesh_index: i32, texture_index: i32) -> i32 {
+pub extern "C" fn xps_get_texture_uv_layer(
+    model: *mut types::Data,
+    mesh_index: i32,
+    texture_index: i32,
+) -> i32 {
     let mut _model = unsafe { &mut *model };
     _model.meshes[mesh_index as usize].textures[texture_index as usize].uv_layer as i32
 }
@@ -142,7 +166,11 @@ pub extern "C" fn xps_get_mesh_index_count(model: *mut types::Data, mesh_index: 
 }
 
 #[no_mangle]
-pub extern "C" fn xps_get_mesh_index(model: *mut types::Data, mesh_index: i32, index_num: i32) -> i32 {
+pub extern "C" fn xps_get_mesh_index(
+    model: *mut types::Data,
+    mesh_index: i32,
+    index_num: i32,
+) -> i32 {
     let mut _model = unsafe { &mut *model };
     _model.meshes[mesh_index as usize].faces[index_num as usize] as i32
 }
@@ -155,12 +183,9 @@ pub extern "C" fn xps_get_vertex_position(
 ) -> Vector3 {
     let mut _model = unsafe { &mut *model };
     Vector3 {
-        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .position[0],
-        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .position[1],
-        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .position[2],
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].position[0],
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].position[1],
+        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].position[2],
     }
 }
 
@@ -172,12 +197,9 @@ pub extern "C" fn xps_get_vertex_normal(
 ) -> Vector3 {
     let mut _model = unsafe { &mut *model };
     Vector3 {
-        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .normal[0],
-        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .normal[1],
-        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .normal[2],
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].normal[0],
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].normal[1],
+        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].normal[2],
     }
 }
 
@@ -189,14 +211,10 @@ pub extern "C" fn xps_get_vertex_color(
 ) -> Color {
     let mut _model = unsafe { &mut *model };
     Color {
-        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color[0],
-        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color[1],
-        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color[2],
-        w: _model.meshes[mesh_index as usize].vertices[vertex_index as usize]
-            .color[3],
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].color[0],
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].color[1],
+        z: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].color[2],
+        w: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].color[3],
     }
 }
 
@@ -209,8 +227,10 @@ pub extern "C" fn xps_get_vertex_uv(
 ) -> Vector2 {
     let mut _model = unsafe { &mut *model };
     Vector2 {
-        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][0],
-        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize][1],
+        x: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize]
+            [0],
+        y: _model.meshes[mesh_index as usize].vertices[vertex_index as usize].uv[layer_id as usize]
+            [1],
     }
 }
 
@@ -238,4 +258,73 @@ pub extern "C" fn xps_get_vertex_bone_weight(
     _model.meshes[mesh_index as usize].vertices[vertex_index as usize].bone_weights
         [weight_id as usize]
         .weight
+}
+
+#[no_mangle]
+fn xps_get_render_group_alpha(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    if _model.meshes[mesh_index as usize].render_group.alpha {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+fn xps_get_render_group_posable(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    if _model.meshes[mesh_index as usize].render_group.posable {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+fn xps_get_render_group_bump1_rep(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    if _model.meshes[mesh_index as usize].render_group.bump1_rep {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+fn xps_get_render_group_bump2_rep(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    if _model.meshes[mesh_index as usize].render_group.bump2_rep {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+fn xps_get_render_group_spec1_rep(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    if _model.meshes[mesh_index as usize].render_group.spec1_rep {
+        1
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+fn xps_get_render_group_texture_count(model: *mut types::Data, mesh_index: i32) -> i32 {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize].render_group.tex_count
+}
+
+#[no_mangle]
+fn xps_get_render_group_texture_type(
+    model: *mut types::Data,
+    mesh_index: i32,
+    texture_type_index: i32,
+) -> *const c_char {
+    let mut _model = unsafe { &mut *model };
+    _model.meshes[mesh_index as usize]
+        .render_group
+        .texture_types[texture_type_index as usize]
+        .as_ptr()
 }

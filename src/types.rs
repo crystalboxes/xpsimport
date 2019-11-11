@@ -1,18 +1,24 @@
 use super::error_types::XpsError;
+use super::material::RenderGroup;
 use std::ffi::CString;
+
+pub struct ImportParameters {
+  pub flip_uv: bool,
+  pub reverse_winding: bool,
+}
 
 pub struct Bone {
   pub id: i16,
   pub name: CString,
-  pub co: [f32;3],
+  pub co: [f32; 3],
   pub parent_id: i16,
 }
 
 pub struct BonePose {
   pub name: String,
-  pub coordinate_delta: [f32;3],
-  pub rotation_delta: [f32;3],
-  pub scale: [f32;3],
+  pub coordinate_delta: [f32; 3],
+  pub rotation_delta: [f32; 3],
+  pub scale: [f32; 3],
 }
 
 pub struct Mesh {
@@ -21,6 +27,7 @@ pub struct Mesh {
   pub vertices: Vec<Vertex>,
   pub faces: Vec<u32>,
   pub uv_count: u16,
+  pub render_group: RenderGroup,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -34,7 +41,7 @@ pub struct Vertex {
   pub position: [f32; 3],
   pub normal: [f32; 3],
   pub color: [u8; 4],
-  pub uv: [[f32;2]; 3],
+  pub uv: [[f32; 2]; 3],
   pub bone_weights: [BoneWeight; 4],
   pub merged: bool,
 }
