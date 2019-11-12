@@ -2,9 +2,9 @@
 #define XPSIMPORT_HG
 
 #ifndef XPS_SHARED_BUILD
-#define XPS_API __declspec(dllexport)
-#else
 #define XPS_API
+#else
+#define XPS_API __declspec(dllexport)
 #endif
 #ifdef __cplusplus
 extern "C"
